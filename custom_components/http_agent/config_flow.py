@@ -199,11 +199,11 @@ class HTTPAgentConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 self.data[CONF_SENSORS] = self.sensors
 
-                # Create unique ID based on URL
+                # Create unique ID based on URL including query parameters
                 parsed_url = urlparse(self.data[CONF_URL])
-                unique_id = f"{parsed_url.netloc}{parsed_url.path}".replace(
+                unique_id = f"{parsed_url.netloc}{parsed_url.path}{parsed_url.query}".replace(
                     "/", "_"
-                ).replace(".", "_")
+                ).replace(".", "_").replace("?", "_").replace("&", "_").replace("=", "_")
 
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()

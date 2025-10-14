@@ -35,8 +35,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Fetch initial data
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = coordinator
-
     # Determine which platforms are needed based on sensor types
     data = dict(entry.data)
     if entry.options:
@@ -53,6 +51,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             needed_platforms.add(Platform.NUMBER)
         elif sensor_type == "device_tracker":
             needed_platforms.add(Platform.DEVICE_TRACKER)
+
+    # Store coordinator and setup platforms info
+    hass.data[DOMAIN][entry.entry_id] = {
+        "coordinator": coordinator,
+        "platforms": list(needed_platforms)
+    }
 
     # Set up only needed platforms
     if needed_platforms:
@@ -73,12 +77,20 @@ async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    entry_data = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry_data["coordinator"]
+    setup_platforms = entry_data["platforms"]
 
     # Clean up the coordinator's session
     await coordinator.async_close()
 
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+    # Only unload platforms that were actually set up for this entry
+    if setup_platforms:
+        unload_ok = await hass.config_entries.async_unload_platforms(entry, setup_platforms)
+    else:
+        unload_ok = True
+
+    if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
