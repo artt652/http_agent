@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2025-10-14
+
+### Fixed
+- Fixed issue where multiple HTTP endpoints from the same domain could not be configured (#13)
+  - Updated unique_id generation to include query parameters, allowing configurations like different METAR station IDs from the same API
+- Fixed sensors becoming unavailable after editing configuration (#12)
+  - Improved platform unloading logic to only unload platforms that were actually set up for the entry
+  - Prevents "Config entry was never loaded!" errors during configuration changes
+
 ## [1.0.0] - 2025-10-08
 
 ### Added
