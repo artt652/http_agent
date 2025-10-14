@@ -55,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Store coordinator and setup platforms info
     hass.data[DOMAIN][entry.entry_id] = {
         "coordinator": coordinator,
-        "platforms": list(needed_platforms)
+        "platforms": list(needed_platforms),
     }
 
     # Set up only needed platforms
@@ -86,7 +86,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Only unload platforms that were actually set up for this entry
     if setup_platforms:
-        unload_ok = await hass.config_entries.async_unload_platforms(entry, setup_platforms)
+        unload_ok = await hass.config_entries.async_unload_platforms(
+            entry, setup_platforms
+        )
     else:
         unload_ok = True
 
