@@ -23,7 +23,6 @@ from .coordinator import HTTPAgentCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -39,10 +38,10 @@ async def async_setup_entry(
 
     sensors = []
     for sensor_config in data[CONF_SENSORS]:
-        # Only create sensors of type "sensor"
         if sensor_config.get(CONF_SENSOR_TYPE, "sensor") == "sensor":
-            sensor_name = sensor_config[CONF_SENSOR_NAME]
-            sensors.append(HTTPAgentSensor(coordinator, entry, sensor_name))
+            sensors.append(
+                HTTPAgentSensor(coordinator, entry, sensor_config)
+            )
 
     async_add_entities(sensors)
 
@@ -77,7 +76,6 @@ async def async_setup_entry(
         _LOGGER.info("Removing obsolete sensor entity: %s", entity_id)
         entity_registry.async_remove(entity_id)
 
-
 class HTTPAgentSensor(CoordinatorEntity, SensorEntity):
     """HTTP Agent sensor."""
 
@@ -85,23 +83,21 @@ class HTTPAgentSensor(CoordinatorEntity, SensorEntity):
         self,
         coordinator: HTTPAgentCoordinator,
         entry: ConfigEntry,
-        sensor_name: str,
+        sensor_config: dict,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entry = entry
-        self.sensor_name = sensor_name
+        self.sensor_config = sensor_config
+        self.sensor_name = sensor_config[CONF_SENSOR_NAME]
 
         # Entity properties
-        self._attr_name = sensor_name
-        self._attr_unique_id = f"{entry.entry_id}_{sensor_name}"
+        self._attr_name = self.sensor_name
+        self._attr_unique_id = f"{entry.entry_id}_{self.sensor_name}"
 
         # Find sensor config
-        self.sensor_config = None
-        for config in entry.data[CONF_SENSORS]:
-            if config[CONF_SENSOR_NAME] == sensor_name:
-                self.sensor_config = config
-                break
+        self._attr_device_class = sensor_config.get(CONF_SENSOR_DEVICE_CLASS)
+        self._attr_native_unit_of_measurement = sensor_config.get(CONF_SENSOR_UNIT)   
 
     @property
     def name(self) -> str:
